@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Launch Game": {
+      "commandName": "Executable",
+      "executablePath": "$(GameDir)\\Taiko no Tatsujin Rhythm Festival.exe",
+      "workingDirectory": "$(GameDir)",
+      "nativeDebugging": true
+    }
+  }
+}
