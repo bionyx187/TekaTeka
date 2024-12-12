@@ -7,6 +7,7 @@
  
  
 # How to use
+ This project it's in very early stages, so don't expect anything functional
  TODO
 
 # Build
