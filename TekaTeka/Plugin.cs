@@ -1,4 +1,4 @@
-﻿using BepInEx.Unity.IL2CPP.Utils;
+using BepInEx.Unity.IL2CPP.Utils;
 using BepInEx.Unity.IL2CPP;
 using BepInEx;
 using BepInEx.Logging;
@@ -19,12 +19,9 @@ namespace TekaTeka
         private Harmony _harmony = null;
         public new static ManualLogSource Log;
 
-
         public ConfigEntry<bool> ConfigEnabled;
         public ConfigEntry<string> ConfigSongTitleLanguageOverride;
         public ConfigEntry<float> ConfigFlipInterval;
-
-
 
         public override void Load()
         {
@@ -39,21 +36,6 @@ namespace TekaTeka
         private void SetupConfig()
         {
             var dataFolder = Path.Combine("BepInEx", "data", ModName);
-
-            ConfigEnabled = Config.Bind("General",
-                "Enabled",
-                true,
-                "Enables the mod.");
-
-            ConfigSongTitleLanguageOverride = Config.Bind("General",
-                "SongTitleLanguageOverride",
-                "JP",
-                "Sets the song title to the selected language. (JP, EN, FR, IT, DE, ES, TW, CN, KO)");
-
-            ConfigFlipInterval = Config.Bind("General",
-                "FlipInterval",
-                3f,
-                "How quickly the difficulty flips between oni and ura.");
         }
 
         private void SetupHarmony()

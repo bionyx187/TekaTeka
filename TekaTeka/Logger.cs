@@ -22,26 +22,26 @@ namespace TekaTeka
         {
             switch (type)
             {
-                case LogType.Info:
-                    Plugin.Log.LogInfo(value);
-                    break;
-                case LogType.Warning:
-                    Plugin.Log.LogWarning(value);
-                    break;
-                case LogType.Error:
-                    Plugin.Log.LogError(value);
-                    break;
-                case LogType.Fatal:
-                    Plugin.Log.LogFatal(value);
-                    break;
-                case LogType.Message:
-                    Plugin.Log.LogMessage(value);
-                    break;
-                case LogType.Debug:
+            case LogType.Info:
+                Plugin.Log.LogInfo(value);
+                break;
+            case LogType.Warning:
+                Plugin.Log.LogWarning(value);
+                break;
+            case LogType.Error:
+                Plugin.Log.LogError(value);
+                break;
+            case LogType.Fatal:
+                Plugin.Log.LogFatal(value);
+                break;
+            case LogType.Message:
+                Plugin.Log.LogMessage(value);
+                break;
+            case LogType.Debug:
 #if DEBUG
-                    Plugin.Log.LogDebug(value);
+                Plugin.Log.LogDebug(value);
 #endif
-                    break;
+                break;
             }
         }
 

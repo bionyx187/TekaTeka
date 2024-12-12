@@ -12,21 +12,18 @@ namespace TekaTeka.Plugins
         const string CHARTS_FOLDER = "fumen";
         const string PRACTICE_DIVISIONS_FOLDER = "fumencsv";
 
-
         static readonly string songsPath = Path.Combine(BepInEx.Paths.GameRootPath, "TekaSongs");
 
-
-        #region Append Custom Songs DB
+#region Append Custom Songs DB
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(MusicDataInterface), "LoadDataFromFile")]
         static void LoadSongsDatabase_Postfix(MusicDataInterface __instance, ref string path)
         {
-            
+
             var bytes = Cryptgraphy.ReadAllAesAndGZipBytes(path, Cryptgraphy.AesKeyType.Type2);
             string jsonString = Encoding.UTF8.GetString(bytes);
             var musicInfolist = JsonSupports.ReadJson<MusicDataInterface.MusicInfo>(jsonString);
-
 
             for (int i = 0; i < musicInfolist.Count; i++)
             {
@@ -36,9 +33,9 @@ namespace TekaTeka.Plugins
             }
         }
 
-        #endregion
+#endregion
 
-        #region Load Custom Chart
+#region Load Custom Chart
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(FumenLoader.PlayerData), "ReadCoroutine")]
@@ -50,24 +47,23 @@ namespace TekaTeka.Plugins
             };
             string fileName = Path.GetFileName(filePath);
             filePath = Path.Combine(songsPath, CHARTS_FOLDER, fileName);
-
         }
 
-        #endregion
+#endregion
 
-        #region Load Custom Practice Chart
+#region Load Custom Practice Chart
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(FumenDivisionManager), nameof(FumenDivisionManager.Load))]
         static bool ReadSongPracticeDivision_Prefix(FumenDivisionManager __instance, ref string musicuid)
         {
-
-            if (File.Exists(Path.Combine(UnityEngine.Application.streamingAssetsPath, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin")))
+            string originalFile =
+                Path.Combine(UnityEngine.Application.streamingAssetsPath, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin");
+            if (File.Exists(originalFile))
             {
                 return true;
             };
             string filePath = Path.Combine(songsPath, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin");
-
 
             var bytes = Cryptgraphy.ReadAllAesAndGZipBytes(filePath, Cryptgraphy.AesKeyType.Type2);
             string csvString = Encoding.UTF8.GetString(bytes);
@@ -78,15 +74,12 @@ namespace TekaTeka.Plugins
             return false;
         }
 
-        #endregion
+#endregion
 
-        #region Load Custom Song file
+#region Load Custom Song file
 
         // TODO
 
-        #endregion
-
-
-
+#endregion
     }
 }
