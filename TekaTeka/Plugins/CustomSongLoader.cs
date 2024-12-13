@@ -61,6 +61,20 @@ namespace TekaTeka.Plugins
             catch (Exception e)
             {
                 Logger.Log($"Got error {e.Message} while reading {musicDataPath}", LogType.Error);
+            };
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(DataManager), nameof(DataManager.Awake))]
+        static void DataManagerAwake_Postfix(DataManager __instance)
+        {
+            foreach (MusicDataInterface.MusicInfo song in customSongsList)
+            {
+                var songId = song.UniqueId;
+
+                var possesionInfo = new InitialPossessionDataInterface.InitialPossessionInfoAccessor(
+                    (int)InitialPossessionDataInterface.RewardTypes.Song, songId);
+                __instance.InitialPossessionData.InitialPossessionInfoAccessers.Add(possesionInfo);
             }
         }
 
