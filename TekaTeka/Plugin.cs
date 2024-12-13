@@ -20,8 +20,6 @@ namespace TekaTeka
         public new static ManualLogSource Log;
 
         public ConfigEntry<bool> ConfigEnabled;
-        public ConfigEntry<string> ConfigSongTitleLanguageOverride;
-        public ConfigEntry<float> ConfigFlipInterval;
 
         public override void Load()
         {
@@ -36,6 +34,11 @@ namespace TekaTeka
         private void SetupConfig()
         {
             var dataFolder = Path.Combine("BepInEx", "data", ModName);
+
+            ConfigEnabled = Config.Bind("General",
+                "Enabled",
+                true,
+                "Enables the mod.");
         }
 
         private void SetupHarmony()

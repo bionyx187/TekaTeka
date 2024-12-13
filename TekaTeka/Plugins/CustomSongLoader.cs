@@ -1,5 +1,6 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,8 +12,13 @@ namespace TekaTeka.Plugins
     {
         const string CHARTS_FOLDER = "fumen";
         const string PRACTICE_DIVISIONS_FOLDER = "fumencsv";
+        const string ASSETS_FOLDER = "ReadAssets";
 
         static readonly string songsPath = Path.Combine(BepInEx.Paths.GameRootPath, "TekaSongs");
+
+        static Dictionary<int, int> musicIdToMusicInfo = new Dictionary<int, int>();
+        static Dictionary<string, int> musicFileToMusicInfo = new Dictionary<string, int>();
+        static List<MusicDataInterface.MusicInfo> customSongsList = new List<MusicDataInterface.MusicInfo>();
 
 #region Append Custom Songs DB
 
@@ -20,16 +26,41 @@ namespace TekaTeka.Plugins
         [HarmonyPatch(typeof(MusicDataInterface), "LoadDataFromFile")]
         static void LoadSongsDatabase_Postfix(MusicDataInterface __instance, ref string path)
         {
-
-            var bytes = Cryptgraphy.ReadAllAesAndGZipBytes(path, Cryptgraphy.AesKeyType.Type2);
-            string jsonString = Encoding.UTF8.GetString(bytes);
-            var musicInfolist = JsonSupports.ReadJson<MusicDataInterface.MusicInfo>(jsonString);
-
-            for (int i = 0; i < musicInfolist.Count; i++)
+            string musicDataPath = Path.Combine(songsPath, ASSETS_FOLDER, "musicinfo");
+            string jsonString;
+            if (File.Exists(musicDataPath + ".json"))
             {
-                MusicDataInterface.MusicInfo song = musicInfolist[i];
+                musicDataPath += ".json";
+                jsonString = File.ReadAllText(musicDataPath);
+            }
+            else if (File.Exists(musicDataPath + ".bin"))
+            {
+                musicDataPath += ".bin";
+                var bytes = Cryptgraphy.ReadAllAesAndGZipBytes(musicDataPath, Cryptgraphy.AesKeyType.Type2);
+                jsonString = Encoding.UTF8.GetString(bytes);
+            }
+            else
+            {
+                Logger.Log($"File \"musicinfo\" at {musicDataPath + "{.bin/.json}"} not present", LogType.Warning);
+                return;
+            }
 
-                __instance.AddMusicInfo(ref song);
+            try
+            {
+                var musicInfolist = JsonSupports.ReadJson<MusicDataInterface.MusicInfo>(jsonString);
+                for (int i = 0; i < musicInfolist.Count; i++)
+                {
+                    MusicDataInterface.MusicInfo song = musicInfolist[i];
+                    customSongsList.Add(song);
+                    musicFileToMusicInfo.TryAdd(song.SongFileName, customSongsList.Count);
+                    musicIdToMusicInfo.TryAdd(song.UniqueId, customSongsList.Count);
+
+                    __instance.AddMusicInfo(ref song);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Log($"Got error {e.Message} while reading {musicDataPath}", LogType.Error);
             }
         }
 
