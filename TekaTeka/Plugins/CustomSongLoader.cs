@@ -48,14 +48,23 @@ namespace TekaTeka.Plugins
             try
             {
                 var musicInfolist = JsonSupports.ReadJson<MusicDataInterface.MusicInfo>(jsonString);
+                Dictionary<int, bool> originalSong = new Dictionary<int, bool>();
+                foreach (var song in __instance.MusicInfoAccesserList)
+                {
+                    originalSong.Add(song.UniqueId, true);
+                }
                 for (int i = 0; i < musicInfolist.Count; i++)
                 {
                     MusicDataInterface.MusicInfo song = musicInfolist[i];
-                    customSongsList.Add(song);
-                    musicFileToMusicInfo.TryAdd(song.SongFileName, customSongsList.Count);
-                    musicIdToMusicInfo.TryAdd(song.UniqueId, customSongsList.Count);
+                    if (!originalSong.GetValueOrDefault(song.UniqueId, false))
+                    {
+                        // TODO: Deal with duplicated values
+                        customSongsList.Add(song);
+                        musicFileToMusicInfo.TryAdd(song.SongFileName, customSongsList.Count);
+                        musicIdToMusicInfo.TryAdd(song.UniqueId, customSongsList.Count);
 
-                    __instance.AddMusicInfo(ref song);
+                        __instance.AddMusicInfo(ref song);
+                    }
                 }
             }
             catch (Exception e)
@@ -68,6 +77,11 @@ namespace TekaTeka.Plugins
         [HarmonyPatch(typeof(DataManager), nameof(DataManager.Awake))]
         static void DataManagerAwake_Postfix(DataManager __instance)
         {
+            if (__instance.InitialPossessionData == null)
+            {
+                return;
+            }
+
             foreach (MusicDataInterface.MusicInfo song in customSongsList)
             {
                 var songId = song.UniqueId;
@@ -104,11 +118,11 @@ namespace TekaTeka.Plugins
         {
             string originalFile =
                 Path.Combine(UnityEngine.Application.streamingAssetsPath, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin");
-            if (File.Exists(originalFile))
+            string filePath = Path.Combine(songsPath, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin");
+            if (File.Exists(originalFile) || !File.Exists(filePath))
             {
                 return true;
             };
-            string filePath = Path.Combine(songsPath, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin");
 
             var bytes = Cryptgraphy.ReadAllAesAndGZipBytes(filePath, Cryptgraphy.AesKeyType.Type2);
             string csvString = Encoding.UTF8.GetString(bytes);

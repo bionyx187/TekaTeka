@@ -35,10 +35,7 @@ namespace TekaTeka
         {
             var dataFolder = Path.Combine("BepInEx", "data", ModName);
 
-            ConfigEnabled = Config.Bind("General",
-                "Enabled",
-                true,
-                "Enables the mod.");
+            ConfigEnabled = Config.Bind("General", "Enabled", true, "Enables the mod.");
         }
 
         private void SetupHarmony()
