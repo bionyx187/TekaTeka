@@ -1,3 +1,4 @@
+using BepInEx.Unity.IL2CPP.Utils.Collections;
 using HarmonyLib;
 using System;
 using System.Collections;
@@ -13,6 +14,7 @@ namespace TekaTeka.Plugins
         const string CHARTS_FOLDER = "fumen";
         const string PRACTICE_DIVISIONS_FOLDER = "fumencsv";
         const string ASSETS_FOLDER = "ReadAssets";
+        const string SONGS_FOLDER = "sound";
 
         static readonly string songsPath = Path.Combine(BepInEx.Paths.GameRootPath, "TekaSongs");
 
@@ -137,7 +139,73 @@ namespace TekaTeka.Plugins
 
 #region Load Custom Song file
 
-        // TODO
+        static IEnumerator CustomSongLoad(CriPlayer player)
+        {
+            if (player != null)
+            {
+                player.isLoadingAsync = true;
+                player.isCancelLoadingAsync = false;
+                player.IsLoadSucceed = false;
+                player.IsPrepared = false;
+                player.LoadingState = CriPlayer.LoadingStates.Loading;
+                player.LoadTime = -1.0f;
+                player.loadStartTime = UnityEngine.Time.time;
+
+                if (player.CueSheetName == "")
+                {
+                    player.isLoadingAsync = false;
+                    player.LoadingState = CriPlayer.LoadingStates.Finished;
+                    // This is wrong, and it causes a warning, but honestly, i have no idea how to use UniTask and the
+                    // game softlocks anyway(I think)
+                    yield return false;
+                }
+
+                string originalFile = Path.Combine(UnityEngine.Application.streamingAssetsPath, SONGS_FOLDER,
+                                                   player.CueSheetName + ".bin");
+
+                string moddedPath = Path.Combine(songsPath, SONGS_FOLDER, player.CueSheetName + ".bin");
+
+                string filePath;
+
+                if (File.Exists(originalFile))
+                {
+                    filePath = originalFile;
+                }
+                else
+                {
+                    filePath = moddedPath;
+                }
+
+                var bytes = Cryptgraphy.ReadAllAesBytes(filePath, Cryptgraphy.AesKeyType.Type0);
+                var cueSheet = CriAtom.AddCueSheet(player.CueSheetName, bytes, null, null);
+                player.CueSheet = cueSheet;
+
+                player.isLoadingAsync = false;
+                player.IsLoadSucceed = true;
+                player.IsPrepared = true;
+                player.LoadingState = CriPlayer.LoadingStates.Finished;
+
+                // Not exactly the same code, but good enough for perfect conditions
+            }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CriPlayer), nameof(CriPlayer.LoadAsync))]
+        static bool CriPlayerLoadAsync_Prefix(CriPlayer __instance, ref Il2CppSystem.Collections.IEnumerator __result)
+        {
+            if (!__instance.CueSheetName.StartsWith("SONG_") && !__instance.CueSheetName.StartsWith("PSONG_"))
+            {
+                return true;
+            }
+
+            __result = CustomSongLoad(__instance).WrapToIl2Cpp();
+            if (__result == null)
+            {
+                return true;
+            }
+
+            return false;
+        }
 
 #endregion
     }
