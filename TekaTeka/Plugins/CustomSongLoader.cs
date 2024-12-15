@@ -22,6 +22,18 @@ namespace TekaTeka.Plugins
         static Dictionary<string, int> musicFileToMusicInfo = new Dictionary<string, int>();
         static List<MusicDataInterface.MusicInfo> customSongsList = new List<MusicDataInterface.MusicInfo>();
 
+        public static void InitializeLoader()
+        {
+            if (!Directory.Exists(songsPath))
+            {
+                Directory.CreateDirectory(songsPath);
+                Directory.CreateDirectory(Path.Combine(songsPath, CHARTS_FOLDER));
+                Directory.CreateDirectory(Path.Combine(songsPath, PRACTICE_DIVISIONS_FOLDER));
+                Directory.CreateDirectory(Path.Combine(songsPath, ASSETS_FOLDER));
+                Directory.CreateDirectory(Path.Combine(songsPath, SONGS_FOLDER));
+            }
+        }
+
 #region Append Custom Songs DB
 
         [HarmonyPostfix]
@@ -189,10 +201,37 @@ namespace TekaTeka.Plugins
             }
         }
 
+        // Patch when loading a SONG_ file
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CriPlayer), nameof(CriPlayer.LoadAsync))]
         static bool CriPlayerLoadAsync_Prefix(CriPlayer __instance, ref Il2CppSystem.Collections.IEnumerator __result)
         {
+            if (!__instance.CueSheetName.StartsWith("SONG_") && !__instance.CueSheetName.StartsWith("PSONG_"))
+            {
+                return true;
+            }
+
+            __result = CustomSongLoad(__instance).WrapToIl2Cpp();
+            if (__result == null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        // Patch when loading a PSONG_ file(Preview song)
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(CriPlayer), nameof(CriPlayer.LoadPreviewBgmAsync))]
+        static bool CriPlayerBgmLoadAsync_Prefix(CriPlayer __instance,
+                                                 ref Il2CppSystem.Collections.IEnumerator __result, ref int downloadId)
+        {
+            // If it is a dlc or music pass song, use original
+            if (downloadId != -1)
+            {
+                return true;
+            }
+
             if (!__instance.CueSheetName.StartsWith("SONG_") && !__instance.CueSheetName.StartsWith("PSONG_"))
             {
                 return true;

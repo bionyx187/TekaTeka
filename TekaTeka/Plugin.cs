@@ -48,6 +48,7 @@ namespace TekaTeka
                 bool result = true;
                 // If any PatchFile fails, result will become false
                 result &= PatchFile(typeof(CustomSongLoader));
+                CustomSongLoader.InitializeLoader();
 
                 if (result)
                 {
