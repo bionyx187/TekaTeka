@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -20,7 +20,7 @@
   </Target>
 
   <PropertyGroup>
-    <AssemblyName>com.DB.RF.$(ModName)</AssemblyName>
+    <AssemblyName>RF.$(ModName)</AssemblyName>
     <Version>$(ModVersion)</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
