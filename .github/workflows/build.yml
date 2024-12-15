@@ -1,0 +1,52 @@
+name: Build TekaTeka
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+  pull_request:
+    branches:
+      - master
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Download Dependencies
+        env:
+          GAME_DEPENDENCIES_URL: ${{ secrets.GAME_DEPENDENCIES_URL }}
+        run: |
+          wget -O dependencies.zip $GAME_DEPENDENCIES_URL -nv
+          unzip dependencies.zip -d dependencies
+
+      - name: Setup Project
+        run: |
+          dotnet nuget add source https://nuget.bepinex.dev/v3/index.json
+          dotnet nuget add source https://nuget.samboy.dev/v3/index.json
+          dotnet restore TekaTeka.sln
+
+      - name: Build Release
+        run: |
+          dotnet build "/p:GameDir=$(realpath ./dependencies/);WORKER=GitHub" --configuration Release TekaTeka.sln
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RF.TekaTeka Release
+          path: |
+            ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.dll
+            ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.pdb

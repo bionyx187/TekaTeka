@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -11,9 +11,10 @@
 
   <Target Name="UserFile" AfterTargets="PreBuildEvent">
     <Copy
-      Condition="!Exists('.\$(MSBuildProjectDir)\$(ModName).csproj.user')"
+      Condition="!Exists('.\$(MSBuildProjectDir)\$(ModName).csproj.user') And '$(GameDir)' == ''"
       SourceFiles="..\$(MSBuildProjectDir)\Resources\$(ModName).csproj.user"
       DestinationFiles=".\$(MSBuildProjectDir)\$(ModName).csproj.user" />
+    <Message Text="path: $(GameDir)" />
     <Error
       Condition="$(GameDir)==''"
       Text="Set the GameDir variable in .csproj.user file to your Rhythm Festival executable directory." />
