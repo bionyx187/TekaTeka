@@ -44,21 +44,56 @@ namespace TekaTeka.Plugins
 
 #region Load Custom Chart
 
+        static IEnumerator emptyEnumerator()
+        {
+            yield return null;
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(FumenLoader.PlayerData), "ReadCoroutine")]
-        static void ReadSongChart_Prefix(FumenLoader.PlayerData __instance, ref string filePath)
+        static unsafe bool ReadSongChart_Prefix(FumenLoader.PlayerData __instance, ref string filePath,
+                                                ref Il2CppSystem.Collections.IEnumerator __result)
         {
-            if (File.Exists(filePath))
-            {
-                return;
-            };
-            string fileName = Path.GetFileName(filePath);
-            string songId = fileName.Substring(0, fileName.LastIndexOf('_')); // abcdef_e.bin -> abcdef
+            // Lets just hope this doesnt cause any leaks...
+            __instance.DestroyFumenBuffer();
+
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            string songId = fileName.Substring(0, fileName.LastIndexOf('_')); // abcdef_e -> abcdef
             string modPath = songsManager.GetModPath(songId);
-            if (modPath != "")
+            Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> bytes;
+            if (modPath != "" && !File.Exists(filePath))
             {
-                filePath = Path.Combine(songsPath, modPath, CHARTS_FOLDER, fileName);
+                string fumenPath = Path.Combine(songsPath, modPath, CHARTS_FOLDER, fileName);
+                if (File.Exists(fumenPath + ".fumen"))
+                {
+                    filePath = fumenPath + ".fumen";
+                }
+                else if (File.Exists(fumenPath + ".bin"))
+                {
+                    filePath = fumenPath + ".bin";
+                }
             }
+
+            if (filePath.EndsWith(".fumen"))
+            {
+
+                bytes = File.ReadAllBytes(filePath);
+            }
+            else
+            {
+                bytes = Cryptgraphy.ReadAllAesAndGZipBytes(filePath, Cryptgraphy.AesKeyType.Type2);
+            }
+
+            __instance.fumenPath = filePath;
+
+            if (__instance != null)
+            {
+                __instance.WriteFumenBuffer(bytes);
+                __instance.isReadEnd = true;
+                __instance.isReadSucceed = true;
+            }
+            __result = emptyEnumerator().WrapToIl2Cpp();
+            return false;
         }
 
 #endregion
@@ -72,14 +107,26 @@ namespace TekaTeka.Plugins
             string originalFile =
                 Path.Combine(UnityEngine.Application.streamingAssetsPath, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin");
             string modName = songsManager.GetModPath(musicuid);
-            string filePath = Path.Combine(songsPath, modName, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin");
-            if (File.Exists(originalFile) || !File.Exists(filePath))
+
+            string filePath = Path.Combine(songsPath, modName, PRACTICE_DIVISIONS_FOLDER, musicuid);
+            if (File.Exists(originalFile) || (!File.Exists(filePath + ".bin") && !File.Exists(filePath + ".csv")))
             {
                 return true;
             };
 
-            var bytes = Cryptgraphy.ReadAllAesAndGZipBytes(filePath, Cryptgraphy.AesKeyType.Type2);
-            string csvString = Encoding.UTF8.GetString(bytes);
+            bool isEncrypted = File.Exists(filePath + ".bin") && !File.Exists(filePath + ".csv");
+
+            string csvString;
+
+            if (isEncrypted)
+            {
+                var bytes = Cryptgraphy.ReadAllAesAndGZipBytes(filePath + ".bin", Cryptgraphy.AesKeyType.Type2);
+                csvString = Encoding.UTF8.GetString(bytes);
+            }
+            else
+            {
+                csvString = File.ReadAllText(filePath + ".csv");
+            }
             var datas = __instance.loader_.CreateDivisionData(csvString);
             __instance.datas_ = datas;
             __instance.IsLoadFinished = true;
@@ -116,20 +163,41 @@ namespace TekaTeka.Plugins
                                                    player.CueSheetName + ".bin");
                 string modName =
                     songsManager.GetModPath(player.CueSheetName.TrimStart('P')); // PSONG_.. -> SONG_ and SONG_ -> SONG_
-                string modFile = Path.Combine(songsPath, modName, SONGS_FOLDER, player.CueSheetName + ".bin");
+                string modFile = Path.Combine(songsPath, modName, SONGS_FOLDER, player.CueSheetName);
 
                 string filePath;
+                bool isEncrypted;
 
-                if (!File.Exists(originalFile) && File.Exists(modFile))
+                if (!File.Exists(originalFile) && (File.Exists(modFile + ".bin") || File.Exists(modFile + ".acb")))
                 {
-                    filePath = modFile;
+                    if (File.Exists(modFile + ".bin"))
+                    {
+                        filePath = modFile + ".bin";
+                        isEncrypted = true;
+                    }
+                    else
+                    {
+                        filePath = modFile + ".acb";
+                        isEncrypted = false;
+                    }
                 }
                 else
                 {
                     filePath = originalFile;
+                    isEncrypted = true;
+                }
+                Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> bytes;
+
+                if (isEncrypted)
+                {
+
+                    bytes = Cryptgraphy.ReadAllAesBytes(filePath, Cryptgraphy.AesKeyType.Type0);
+                }
+                else
+                {
+                    bytes = File.ReadAllBytes(filePath);
                 }
 
-                var bytes = Cryptgraphy.ReadAllAesBytes(filePath, Cryptgraphy.AesKeyType.Type0);
                 var cueSheet = CriAtom.AddCueSheet(player.CueSheetName, bytes, null, null);
                 player.CueSheet = cueSheet;
 
