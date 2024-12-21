@@ -1,6 +1,6 @@
 # TekaTeka
 
-Custom Song Loader and unofficial successor of (TakoTako)[https://github.com/Fluto/TakoTako] for Taiko no Tatsujin: Rhythm Festival
+Custom Song Loader and unofficial successor of [TakoTako](https://github.com/Fluto/TakoTako) for Taiko no Tatsujin: Rhythm Festival
 
 # Requirements
 
