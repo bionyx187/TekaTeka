@@ -113,17 +113,20 @@ namespace TekaTeka.Utils
             List<SongMod> mods = this.GetMods();
             foreach (SongMod mod in mods)
             {
-                this.AddMod(mod);
+                int songsAdded = this.AddMod(mod);
+                Logger.Log($"{songsAdded} out of {mod.songList.Count} songs were added from mod {mod.modName}");
             }
         }
 
-        public void AddMod(SongMod mod)
+        public int AddMod(SongMod mod)
         {
+            int songsAdded = 0;
             for (int i = 0; i < mod.songList.Count; i++)
             {
                 MusicDataInterface.MusicInfo song = mod.songList[i];
                 if (!this.currentSongs.Contains(song.UniqueId))
                 {
+                    songsAdded++;
                     this.currentSongs.Add(song.UniqueId);
                     songFileToModName.Add(song.SongFileName, mod.modName);
                     uniqueIdToModName.Add(song.UniqueId, mod.modName);
@@ -134,7 +137,14 @@ namespace TekaTeka.Utils
                             (int)InitialPossessionDataInterface.RewardTypes.Song, song.UniqueId));
                     musicData.AddMusicInfo(ref song);
                 }
+                else
+                {
+#if DEBUG
+                    Logger.Log($"{song.UniqueId} from {mod.modName} Skipped", LogType.Debug);
+#endif
+                }
             }
+            return songsAdded;
         }
 
         public string GetModPath(int uniqueId)

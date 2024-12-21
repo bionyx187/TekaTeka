@@ -10,10 +10,11 @@ using System.Collections;
 
 namespace TekaTeka
 {
-    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, ModName, MyPluginInfo.PLUGIN_VERSION)]
+    [BepInPlugin(MyPluginInfo.PLUGIN_GUID, ModName, ModVersion)]
     public class Plugin : BasePlugin
     {
         public const string ModName = "TekaTeka";
+        public const string ModVersion = "1.0.0";
 
         public static Plugin Instance;
         private Harmony _harmony = null;
