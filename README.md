@@ -1,20 +1,22 @@
 # TekaTeka
- Custom Song Loader for Taiko no Tatsujin: Rhythm Festival (WIP)
- 
-# Requirements
- Visual Studio 2022 or newer\
- Taiko no Tatsujin: Rhythm Festival
- 
- 
-# How to use
- This project it's in very early stages, so don't expect anything functional
- TODO
 
-# Build
- Install [BepInEx be 697](https://builds.bepinex.dev/projects/bepinex_be) or [BepInEx 6.0.0-pre.2](https://github.com/BepInEx/BepInEx/releases/tag/v6.0.0-pre.2) into your Rhythm Festival directory and launch the game.\
- This will generate all the dummy dlls in the interop folder that will be used as references.\
- Make sure you install the Unity.IL2CPP-win-x64 version.\
- Newer versions of BepInEx could have breaking API changes until the first stable v6 release, so those are not recommended at this time.
- 
- Attempt to build the project, or copy the .csproj.user file from the Resources file to the same directory as the .csproj file.\
- Edit the .csproj.user file and place your Rhythm Festival file location in the "GameDir" variable.
+Custom Song Loader and unofficial successor of (TakoTako)[https://github.com/Fluto/TakoTako] for Taiko no Tatsujin: Rhythm Festival
+
+# Requirements
+
+[BepInEx be 697](https://builds.bepinex.dev/projects/bepinex_be) or [BepInEx 6.0.0-pre.2](https://github.com/BepInEx/BepInEx/releases/tag/v6.0.0-pre.2)\
+ Taiko no Tatsujin: Rhythm Festival
+
+# How to use
+
+[Install BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html)\
+Download the latest version of [`RF.TekaTeka.dll`]() from the [releases page](https://github.com/Renzo904/TekaTeka/releases) and paste it on `(GameFolder)\BepInEx\plugins`\
+Place all your mods on the folder named `TekaSongs` created the the first time you execute the mod
+
+# Contributing
+
+[CONTRIBUTING.md](docs/CONTRIBUTING.md)
+
+# Mod Creation
+
+[MODS.md](docs/MODS.md)
