@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - dev
+    tags:
+      - "**"
 
   pull_request:
     branches:
@@ -48,5 +50,24 @@ jobs:
         with:
           name: RF.TekaTeka Release
           path: |
+            ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.dll
+            ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.pdb
+
+      - name: Create Release Page
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          fail_on_unmatched_files: true
+          body: |
+            ## How to use
+
+            - Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html)
+            - Download the latest version of `RF.TekaTeka.dll` from this page and paste it on `(GameFolder)\BepInEx\plugins\`
+            - Place all your mods on the folder named `TekaSongs` created the the first time you execute the mod
+
+            ## CHANGELOG
+              
+            `TODO`
+          files: |
             ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.dll
             ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.pdb
