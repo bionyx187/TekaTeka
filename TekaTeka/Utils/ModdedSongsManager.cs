@@ -1,5 +1,6 @@
-﻿using System.Text;
+using System.Text;
 using TekaTeka.Plugins;
+using Tommy;
 
 namespace TekaTeka.Utils
 {
@@ -15,16 +16,65 @@ namespace TekaTeka.Utils
 
         public class SongMod
         {
+            public string modFolder;
             public string modName;
             public bool enabled;
             public List<MusicDataInterface.MusicInfo> songList = new List<MusicDataInterface.MusicInfo>();
 
             public SongMod(string modName)
             {
-                this.modName = modName;
+                this.modFolder = modName;
+                string modPath = Path.Combine(CustomSongLoader.songsPath, this.modFolder);
+
+                StreamReader configToml;
+
                 if (!this.IsValidMod())
                 {
                     this.enabled = false;
+                    return;
+                }
+
+                TomlTable? table = null;
+
+                try
+                {
+                    configToml = File.OpenText(Path.Combine(modPath, "config.toml"));
+
+                    table = TOML.Parse(configToml);
+                }
+                catch (Exception e)
+                {
+                    if (e.GetType() != typeof(IOException))
+                    {
+                        Logger.Log($"'config.toml' not found in mod {modName}. Creating...", LogType.Warning);
+                    }
+                    else if (e.GetType() != typeof(TomlParseException))
+                    {
+                        Logger.Log($"'config.toml' from {modName} was not valid. Recreating...", LogType.Warning);
+                    }
+                }
+
+                if (table == null)
+                {
+                    table = new TomlTable();
+                    table.Add("enabled", true);
+                    table.Add("name", modName);
+                    table.Add("version", "0.1");
+                    table.Add("description", "");
+
+                    using (StreamWriter writer = File.CreateText(Path.Combine(modPath, "config.toml")))
+                    {
+                        table.WriteTo(writer);
+                        writer.Flush();
+                    }
+                }
+
+                this.enabled = table["enabled"].IsBoolean ? table["enabled"].AsBoolean.Value : true;
+                this.modName = table["name"].IsString ? table["name"].AsString.Value : modName;
+
+                if (!this.enabled)
+                {
+                    Logger.Log($"Mod {this.modName} explicitly disabled, skipping...", LogType.Debug);
                     return;
                 }
 
@@ -36,7 +86,7 @@ namespace TekaTeka.Utils
 
             public bool IsValidMod()
             {
-                string modFolder = Path.Combine(CustomSongLoader.songsPath, this.modName);
+                string modFolder = Path.Combine(CustomSongLoader.songsPath, this.modFolder);
                 string musicDataPath = Path.Combine(modFolder, CustomSongLoader.ASSETS_FOLDER, "musicinfo");
                 if (!Directory.Exists(modFolder))
                 {
@@ -53,8 +103,8 @@ namespace TekaTeka.Utils
 
             public bool ReadMusicDb()
             {
-                string musicDataPath =
-                    Path.Combine(CustomSongLoader.songsPath, this.modName, CustomSongLoader.ASSETS_FOLDER, "musicinfo");
+                string musicDataPath = Path.Combine(CustomSongLoader.songsPath, this.modFolder,
+                                                    CustomSongLoader.ASSETS_FOLDER, "musicinfo");
                 string jsonString;
                 if (File.Exists(musicDataPath + ".json"))
                 {
@@ -100,7 +150,7 @@ namespace TekaTeka.Utils
                     SongMod mod = new SongMod(folder);
                     if (mod.enabled)
                     {
-                        Logger.Log($"Mod {mod.modName} Loaded", LogType.Info);
+                        Logger.Log($"Mod {mod.modFolder} Loaded", LogType.Info);
                         mods.Add(mod);
                     }
                 }
@@ -113,8 +163,11 @@ namespace TekaTeka.Utils
             List<SongMod> mods = this.GetMods();
             foreach (SongMod mod in mods)
             {
-                int songsAdded = this.AddMod(mod);
-                Logger.Log($"{songsAdded} out of {mod.songList.Count} songs were added from mod {mod.modName}");
+                if (mod.enabled)
+                {
+                    int songsAdded = this.AddMod(mod);
+                    Logger.Log($"{songsAdded} out of {mod.songList.Count} songs were added from mod \"{mod.modName}\"");
+                }
             }
         }
 
@@ -128,9 +181,9 @@ namespace TekaTeka.Utils
                 {
                     songsAdded++;
                     this.currentSongs.Add(song.UniqueId);
-                    songFileToModName.Add(song.SongFileName, mod.modName);
-                    uniqueIdToModName.Add(song.UniqueId, mod.modName);
-                    idToModName.Add(song.Id, mod.modName);
+                    songFileToModName.Add(song.SongFileName, mod.modFolder);
+                    uniqueIdToModName.Add(song.UniqueId, mod.modFolder);
+                    idToModName.Add(song.Id, mod.modFolder);
 
                     initialPossessionData.InitialPossessionInfoAccessers.Add(
                         new InitialPossessionDataInterface.InitialPossessionInfoAccessor(
