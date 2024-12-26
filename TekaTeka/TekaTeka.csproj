@@ -36,10 +36,13 @@
     <Reference Include="$(GameDir)\BepInEx\interop\*.dll" Private="false" />
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.8" PrivateAssets="all" />
     <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" />
+    <Reference Include="$(SolutionDir)\Libraries\SonicAudioLib.dll" Private="false" />
   </ItemGroup>
 
   <Target Name="PostBuildCopy" AfterTargets="PostBuildEvent" Condition="$(CopyOutputFiles) == true">
     <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll"
+      DestinationFolder="$(GameDir)\BepInEx\plugins\$(AssemblyName)" />
+    <Copy SourceFiles="$(SolutionDir)\Libraries\SonicAudioLib.dll"
       DestinationFolder="$(GameDir)\BepInEx\plugins\$(AssemblyName)" />
     <Copy Condition="$(DefineConstants.Contains('DEBUG'))"
       SourceFiles="$(TargetDir)$(AssemblyName).pdb"

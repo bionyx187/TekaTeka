@@ -9,9 +9,9 @@ Custom Song Loader and unofficial successor of [TakoTako](https://github.com/Flu
 
 # How to use
 
-[Install BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html)\
-Download the latest version of [`RF.TekaTeka.dll`]() from the [releases page](https://github.com/Renzo904/TekaTeka/releases) and paste it on `(GameFolder)\BepInEx\plugins`\
-Place all your mods on the folder named `TekaSongs` created the the first time you execute the mod
+- [Install BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html)
+- Download the latest version of `RF.TekaTeka.zip` from the [releases page](https://github.com/Renzo904/TekaTeka/releases) and extract its contents on `(GameFolder)\BepInEx\plugins\`
+- Place all your mods on the folder named `TekaSongs` created the first time you execute the mod
 
 # Contributing
 
@@ -20,3 +20,7 @@ Place all your mods on the folder named `TekaSongs` created the the first time y
 # Mod Creation
 
 [MODS.md](docs/MODS.md)
+
+## Credits
+
+- [blueskythlikesclouds](https://github.com/blueskythlikesclouds) - [SonicAudioTools](https://github.com/blueskythlikesclouds/SonicAudioTools)
