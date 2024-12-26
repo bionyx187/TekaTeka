@@ -5,8 +5,7 @@ on:
     branches:
       - main
       - dev
-    tags:
-      - "**"
+    tags-ignore: "**"
 
   pull_request:
     branches:
@@ -16,8 +15,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      - contents: write
 
     steps:
       - name: Checkout
@@ -53,34 +50,4 @@ jobs:
           name: RF.TekaTeka Release
           path: |
             ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.dll
-            ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.pdb
-
-      - name: Pack Release
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          mkdir release
-          mkdir ./release/RF.TekaTeka
-          cp ./Libraries/SonicAudioLib.dll ./release/RF.TekaTeka/SonicAudioLib.dll
-          cp ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.dll ./release/RF.TekaTeka/RF.TekaTeka.dll
-          cp ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.pdb ./release/RF.TekaTeka.pdb
-          cd ./release
-          zip ./RF.TekaTeka.zip ./RF.TekaTeka/RF.TekaTeka.dll ./RF.TekaTeka/SonicAudioLib.dll
-
-      - name: Create Release Page
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          fail_on_unmatched_files: true
-          body: |
-            ## How to use
-
-            - Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html)
-            - Download the latest version of `RF.TekaTeka.zip` from this page and extract its contents on `(GameFolder)\BepInEx\plugins\`
-            - Place all your mods on the folder named `TekaSongs` created the first time you execute the mod
-
-            ## CHANGELOG
-              
-            `TODO`
-          files: |
-            ./release/RF.TekaTeka.zip
             ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.pdb
