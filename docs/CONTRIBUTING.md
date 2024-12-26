@@ -16,4 +16,4 @@ Attempt to build the project, or copy the .csproj.user file from the Resources f
 
 # Format
 
-We use [Microsoft Style Guide](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options) with slightly modifications, for convenience, thee is a [pre-commit](https://pre-commit.com/) config which uses clang-format before each commit
+We use [Microsoft Style Guide](https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options) with slightly modifications, for convenience, there is a [pre-commit](https://pre-commit.com/) config which uses clang-format before each commit
