@@ -29,6 +29,11 @@ namespace TekaTeka.Plugins
             {
                 Directory.CreateDirectory(songsPath);
             }
+
+            if (!Directory.Exists(Path.Combine(songsPath, "TJAsongs")))
+            {
+                Directory.CreateDirectory(Path.Combine(songsPath, "TJAsongs"));
+            }
         }
 
 #if DEBUG
