@@ -3,6 +3,8 @@ using HarmonyLib;
 using System.Collections;
 using System.Text;
 using TekaTeka.Utils;
+using Scripts.UserData;
+using Il2CppSystem.Security.Cryptography;
 
 namespace TekaTeka.Plugins
 {
@@ -17,6 +19,8 @@ namespace TekaTeka.Plugins
 
         static List<MusicDataInterface.MusicInfo> customSongsList = new List<MusicDataInterface.MusicInfo>();
 
+        static CommonObjects commonObjects => TaikoSingletonMonoBehaviour<CommonObjects>.Instance;
+
         static ModdedSongsManager songsManager;
 
         public static void InitializeLoader()
@@ -26,6 +30,16 @@ namespace TekaTeka.Plugins
                 Directory.CreateDirectory(songsPath);
             }
         }
+
+#if DEBUG
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(UnityEngine.Logger), nameof(UnityEngine.Logger.LogException))]
+        [HarmonyPatch(new Type[] { typeof(Il2CppSystem.Exception), typeof(UnityEngine.Object) })]
+        static void DemistifyStackTrace(Il2CppSystem.Exception exception, UnityEngine.Object context)
+        {
+            Logger.Log(exception.GetStackTrace(true));
+        }
+#endif
 
 #region Append Custom Songs DB
 
@@ -38,6 +52,111 @@ namespace TekaTeka.Plugins
                 return;
             }
             songsManager = new ModdedSongsManager();
+        }
+
+#endregion
+
+#region Custom Save Data
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(ApplicationUserDataSave._SaveAsync_d__21),
+                      nameof(ApplicationUserDataSave._SaveAsync_d__21.MoveNext))]
+        public static void PatchSave(ref ApplicationUserDataSave._SaveAsync_d__21 __instance)
+        {
+            if (__instance.__1__state == 0)
+            {
+                var userData = __instance.__4__this.data;
+
+                var backup = new Scripts.UserData.MusicInfoEx[userData.MusicsData.Datas.Length];
+
+                userData.MusicsData.Datas.CopyTo(backup, 0);
+                userData = songsManager.FilterModdedData(userData);
+
+                var xml = XmlSerializerBehaviour.Serializer(userData);
+
+                xml = Cryptgraphy.EncryptValueC(xml);
+
+                var dataSize = System.BitConverter.GetBytes(xml.Length);
+
+                var sha256Data = Cryptgraphy.GetHashByte<SHA256CryptoServiceProvider>(xml);
+
+                xml = Cryptgraphy.CompositData(dataSize, sha256Data, xml);
+
+                __instance._compositionData_5__2 = xml;
+
+                commonObjects.Platform.Save.SaveAsync(__instance._compositionData_5__2);
+
+                Scripts.UserData.MusicInfoEx[] datas = userData.MusicsData.Datas;
+                Array.Resize(ref datas, backup.Length);
+                Array.Copy(backup, 3000, datas, 3000, backup.Length - 3000);
+                userData.MusicsData.Datas = datas;
+
+                TaikoSingletonMonoBehaviour<SaveIcon>.Instance.Deactive();
+                __instance.__1__state = 2;
+                __instance._compositionData_5__2 = null;
+            }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Scripts.UserData.UserData), nameof(Scripts.UserData.UserData.FixData))]
+        static void PatchLoad(ref Scripts.UserData.UserData __instance)
+        {
+            int oldLen = __instance.MusicsData.Datas.Length;
+            int newLen = __instance.MusicsData.Datas.Length + songsManager.tjaSongs;
+
+            Scripts.UserData.MusicInfoEx[] newArray = __instance.MusicsData.Datas;
+
+            Scripts.UserData.Flag.UserFlagDataDefine.FlagData[] songArray =
+                __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.Song].ToArray();
+            Scripts.UserData.Flag.UserFlagDataDefine.FlagData[] tittleSongArray =
+                __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.TitleSongId]
+                    .ToArray();
+
+            Array.Resize(ref newArray, newLen);
+            Array.Resize(ref songArray, newLen);
+            Array.Resize(ref tittleSongArray, newLen);
+            for (int i = 3000; i < newLen; i++)
+            {
+                newArray[i] = new Scripts.UserData.MusicInfoEx();
+
+                newArray[i].SetDefault();
+            }
+
+            foreach (SongMod mod in songsManager.modsEnabled)
+            {
+                if (mod is TjaSongMod)
+                {
+                    TjaSongMod tjaMod = (TjaSongMod)mod;
+                    int uniqueId = tjaMod.uniqueId;
+                    var musicData = __instance.MusicsData;
+
+                    __instance.MusicsData = musicData;
+                    try
+                    {
+
+                        var musicInfo = tjaMod.LoadUserData();
+
+                        newArray[uniqueId] = musicInfo;
+                    }
+                    catch (Exception e)
+                    {
+                        var musicInfo = new Scripts.UserData.MusicInfoEx();
+                        musicInfo.SetDefault();
+                        newArray[uniqueId] = musicInfo;
+                    }
+
+                    songArray[uniqueId] =
+                        new Scripts.UserData.Flag.UserFlagDataDefine.FlagData() { Id = tjaMod.uniqueId };
+                    tittleSongArray[uniqueId] =
+                        new Scripts.UserData.Flag.UserFlagDataDefine.FlagData() { Id = tjaMod.uniqueId };
+                }
+            }
+
+            __instance.MusicsData.Datas = newArray;
+
+            __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.Song] = songArray;
+            __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.TitleSongId] =
+                tittleSongArray;
         }
 
 #endregion
@@ -59,25 +178,15 @@ namespace TekaTeka.Plugins
 
             string fileName = Path.GetFileNameWithoutExtension(filePath);
             string songId = fileName.Substring(0, fileName.LastIndexOf('_')); // abcdef_e -> abcdef
-            string modPath = songsManager.GetModPath(songId);
+            string diff = fileName.Substring(fileName.LastIndexOf('_') + 1);
             Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> bytes;
-            if (modPath != "" && !File.Exists(filePath))
-            {
-                string fumenPath = Path.Combine(songsPath, modPath, CHARTS_FOLDER, fileName);
-                if (File.Exists(fumenPath + ".fumen"))
-                {
-                    filePath = fumenPath + ".fumen";
-                }
-                else if (File.Exists(fumenPath + ".bin"))
-                {
-                    filePath = fumenPath + ".bin";
-                }
-            }
 
-            if (filePath.EndsWith(".fumen"))
+            SongMod? mod = songsManager.GetModPath(songId);
+            if (mod != null)
             {
-
-                bytes = File.ReadAllBytes(filePath);
+                SongEntry songEntry = mod.GetSongEntry(fileName);
+                bytes = songEntry.GetFumenBytes();
+                filePath = songEntry.GetFilePath();
             }
             else
             {
@@ -106,7 +215,9 @@ namespace TekaTeka.Plugins
         {
             string originalFile =
                 Path.Combine(UnityEngine.Application.streamingAssetsPath, PRACTICE_DIVISIONS_FOLDER, musicuid + ".bin");
-            string modName = songsManager.GetModPath(musicuid);
+
+            SongMod? mod = songsManager.GetModPath(musicuid);
+            string modName = mod != null ? mod.GetModFolder() : "";
 
             string filePath = Path.Combine(songsPath, modName, PRACTICE_DIVISIONS_FOLDER, musicuid);
             if (File.Exists(originalFile) || (!File.Exists(filePath + ".bin") && !File.Exists(filePath + ".csv")))
@@ -161,44 +272,31 @@ namespace TekaTeka.Plugins
 
                 string originalFile = Path.Combine(UnityEngine.Application.streamingAssetsPath, SONGS_FOLDER,
                                                    player.CueSheetName + ".bin");
-                string modName =
-                    songsManager.GetModPath(player.CueSheetName.TrimStart('P')); // PSONG_.. -> SONG_ and SONG_ -> SONG_
+
+                string songFile = player.CueSheetName.TrimStart('P'); // PSONG_.. -> SONG_..
+
+                SongMod? mod = songsManager.GetModPath(songFile);
+                string modName = mod != null ? mod.GetModFolder() : "";
                 string modFile = Path.Combine(songsPath, modName, SONGS_FOLDER, player.CueSheetName);
-
-                string filePath;
-                bool isEncrypted;
-
-                if (!File.Exists(originalFile) && (File.Exists(modFile + ".bin") || File.Exists(modFile + ".acb")))
-                {
-                    if (File.Exists(modFile + ".bin"))
-                    {
-                        filePath = modFile + ".bin";
-                        isEncrypted = true;
-                    }
-                    else
-                    {
-                        filePath = modFile + ".acb";
-                        isEncrypted = false;
-                    }
-                }
-                else
-                {
-                    filePath = originalFile;
-                    isEncrypted = true;
-                }
                 Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> bytes;
 
-                if (isEncrypted)
+                if (mod != null)
                 {
-
-                    bytes = Cryptgraphy.ReadAllAesBytes(filePath, Cryptgraphy.AesKeyType.Type0);
+                    SongEntry songEntry = mod.GetSongEntry(songFile, true);
+                    bytes = songEntry.GetSongBytes(player.CueSheetName.StartsWith("P"));
                 }
                 else
                 {
-                    bytes = File.ReadAllBytes(filePath);
+                    var request = Cryptgraphy.ReadAllAesBytesAsync(originalFile, Cryptgraphy.AesKeyType.Type0);
+                    while (!request.IsDone)
+                    {
+                        yield return null;
+                    }
+                    bytes = request.Bytes;
                 }
 
-                var cueSheet = CriAtom.AddCueSheet(player.CueSheetName, bytes, null, null);
+                var cueSheet = CriAtom.AddCueSheetAsync(player.CueSheetName, bytes, null, null);
+
                 player.CueSheet = cueSheet;
 
                 player.isLoadingAsync = false;
