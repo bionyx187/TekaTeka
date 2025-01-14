@@ -119,7 +119,7 @@ namespace TekaTeka.Utils
         {
             var directory = Path.GetDirectoryName(this.modPath);
 
-            string acbFile = Path.GetFileNameWithoutExtension(this.modPath) + ".acb";
+            string acbFile = Path.GetFileNameWithoutExtension(this.song.metadata.wave) + ".acb";
             int offset;
             if (isPreview)
             {

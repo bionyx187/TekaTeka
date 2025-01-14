@@ -43,11 +43,18 @@ namespace TekaTeka.Utils
                 string folder = Path.GetFileName(path) ?? "";
                 if (folder != "" && folder != "TJAsongs")
                 {
-                    FumenSongMod mod = new FumenSongMod(folder);
-                    if (mod.enabled)
+                    try
                     {
-                        Logger.Log($"Mod {mod.modName} Loaded", LogType.Info);
-                        mods.Add(mod);
+                        FumenSongMod mod = new FumenSongMod(folder);
+                        if (mod.enabled)
+                        {
+                            Logger.Log($"Mod {mod.modName} Loaded", LogType.Info);
+                            mods.Add(mod);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log($"Error when loading Fumen mod \"{path}\":\n{ex.ToString()}", LogType.Error);
                     }
                 }
             }
@@ -60,12 +67,19 @@ namespace TekaTeka.Utils
                 string folder = Path.GetFileName(path) ?? "";
                 if (folder != "")
                 {
-                    TjaSongMod mod = new TjaSongMod(folder, 3000 + tjaSongs);
-                    if (mod.enabled)
+                    try
                     {
-                        Logger.Log($"Mod {mod.name} Loaded", LogType.Info);
-                        mods.Add(mod);
-                        tjaSongs++;
+                        TjaSongMod mod = new TjaSongMod(folder, 3000 + tjaSongs);
+                        if (mod.enabled)
+                        {
+                            Logger.Log($"Mod {mod.name} Loaded", LogType.Info);
+                            mods.Add(mod);
+                            tjaSongs++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log($"Error when loading TJA mod \"{path}\":\n{ex.ToString()}", LogType.Error);
                     }
                 }
             }
@@ -78,7 +92,15 @@ namespace TekaTeka.Utils
             {
                 if (mod.enabled)
                 {
-                    mod.AddMod(this);
+                    try
+                    {
+                        mod.AddMod(this);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log($"Error when setting up mod \"{mod.name}\":\n{ex.ToString()}", LogType.Error);
+                        continue;
+                    }
                     modsEnabled.Add(mod);
                 }
             }
