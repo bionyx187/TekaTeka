@@ -108,6 +108,7 @@ namespace TekaTeka.Plugins
             int newLen = __instance.MusicsData.Datas.Length + songsManager.tjaSongs;
 
             Scripts.UserData.MusicInfoEx[] newArray = __instance.MusicsData.Datas;
+            Scripts.UserData.MusicInfo2PEx[] newArray2 = Scripts.Scene.SceneDataExchanger.MusicData2P.Datas;
 
             Scripts.UserData.Flag.UserFlagDataDefine.FlagData[] songArray =
                 __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.Song].ToArray();
@@ -116,13 +117,16 @@ namespace TekaTeka.Plugins
                     .ToArray();
 
             Array.Resize(ref newArray, newLen);
+            Array.Resize(ref newArray2, newLen);
             Array.Resize(ref songArray, newLen);
             Array.Resize(ref tittleSongArray, newLen);
             for (int i = 3000; i < newLen; i++)
             {
                 newArray[i] = new Scripts.UserData.MusicInfoEx();
+                newArray2[i] = new Scripts.UserData.MusicInfo2PEx();
 
                 newArray[i].SetDefault();
+                newArray2[i].SetDefault();
             }
 
             foreach (SongMod mod in songsManager.modsEnabled)
@@ -156,6 +160,7 @@ namespace TekaTeka.Plugins
             }
 
             __instance.MusicsData.Datas = newArray;
+            Scripts.Scene.SceneDataExchanger.MusicData2P.Datas = newArray2;
 
             __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.Song] = songArray;
             __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.TitleSongId] =
