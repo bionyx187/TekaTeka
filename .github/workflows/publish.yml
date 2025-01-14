@@ -5,7 +5,7 @@ on:
     tags: "*"
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -43,11 +43,11 @@ jobs:
         run: |
           mkdir release
           mkdir ./release/RF.TekaTeka
-          cp ./Libraries/SonicAudioLib.dll ./release/RF.TekaTeka/SonicAudioLib.dll
+          cp ./TekaTeka/bin/Release/net6.0/tja2fumen.dll ./release/RF.TekaTeka/tja2fumen.dll
           cp ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.dll ./release/RF.TekaTeka/RF.TekaTeka.dll
           cp ./TekaTeka/bin/Release/net6.0/RF.TekaTeka.pdb ./release/RF.TekaTeka.pdb
           cd ./release
-          zip ./RF.TekaTeka.zip ./RF.TekaTeka/RF.TekaTeka.dll ./RF.TekaTeka/SonicAudioLib.dll
+          zip ./RF.TekaTeka.zip ./RF.TekaTeka/RF.TekaTeka.dll ./RF.TekaTeka/tja2fumen.dll
 
       - name: Create Release Page
         uses: softprops/action-gh-release@v2
