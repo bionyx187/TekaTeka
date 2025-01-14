@@ -36,7 +36,6 @@ namespace TekaTeka.Plugins
             }
         }
 
-#if DEBUG
         [HarmonyPrefix]
         [HarmonyPatch(typeof(UnityEngine.Logger), nameof(UnityEngine.Logger.LogException))]
         [HarmonyPatch(new Type[] { typeof(Il2CppSystem.Exception), typeof(UnityEngine.Object) })]
@@ -44,7 +43,6 @@ namespace TekaTeka.Plugins
         {
             Logger.Log(exception.GetStackTrace(true));
         }
-#endif
 
 #region Append Custom Songs DB
 
