@@ -28,7 +28,7 @@ Custom Song Loader and unofficial successor of [TakoTako](https://github.com/Flu
 
 You can place all your mods on the folder named `TekaSongs` created the first time you execute the mod.
 
-If you have a TJA song, you can add it to the folder `TekaSongs/TJASongs`
+If you have a TJA song, you can add it to the folder `TekaSongs/TJASongs/(Desired genre)`
 
 # Contributing
 
