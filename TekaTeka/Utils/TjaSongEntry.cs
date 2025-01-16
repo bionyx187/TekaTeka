@@ -8,15 +8,24 @@ namespace TekaTeka.Utils
         string modPath;
 
         tja2fumen.TJASong song;
+        TjaSongMod.Genre genre;
 
-        public TjaSongEntry(string modFolder, int id)
+        string modFolderPath => Path.Combine(CustomSongLoader.songsPath, "TJAsongs",
+                                             TjaSongMod.GenreFolders[(int)this.genre], this.modFolder);
+
+        string tjaPath => Path.Combine(this.modFolderPath, this.modFolder + ".tja");
+        string savesPath => Path.Combine(this.modFolderPath, "saves.json");
+
+        string wavePath => Path.Combine(this.modFolderPath, this.GetWaveName());
+
+        public TjaSongEntry(string modFolder, int id, TjaSongMod.Genre genre)
         {
             this.modFolder = modFolder;
-            this.modPath = Path.Combine(CustomSongLoader.songsPath, "TJAsongs", this.modFolder);
-            string tjaPath = Path.Combine(this.modPath, this.modFolder + ".tja");
-            song = tja2fumen.Parsers.ParseTja(tjaPath);
+            this.genre = genre;
+            this.modPath = modFolderPath;
+            song = tja2fumen.Parsers.ParseTja(this.tjaPath);
 
-            uint songHash = _3rdParty.MurmurHash2.Hash(File.ReadAllBytes(tjaPath)) & 0xFFFF_FFF;
+            uint songHash = _3rdParty.MurmurHash2.Hash(File.ReadAllBytes(this.tjaPath)) & 0xFFFF_FFF;
 
             this.musicInfo = new MusicDataInterface.MusicInfo { SongNameJP = this.song.metadata.titleJA,
                                                                 SongNameEN = this.song.metadata.titleEN,
@@ -37,8 +46,8 @@ namespace TekaTeka.Utils
                                                                 SongSubDE = this.song.metadata.subtitle,
                                                                 SongSubIT = this.song.metadata.subtitle,
                                                                 SongFileName = $"SONG_{songHash}",
-                                                                GenreNo = 0,
-                                                                Order = 103170,
+                                                                GenreNo = (int)this.genre,
+                                                                Order = 1300000,
                                                                 HasPreviewInPackage = true,
                                                                 IsDefault = true,
                                                                 CanMyBattleSong = false,
@@ -73,7 +82,12 @@ namespace TekaTeka.Utils
 
         public override string GetFilePath()
         {
-            return Path.Combine(CustomSongLoader.songsPath, "TJAsongs", this.modFolder, this.modFolder + ".tja");
+            return this.tjaPath;
+        }
+
+        public string GetWaveName()
+        {
+            return this.song.metadata.wave;
         }
 
         public override byte[] GetFumenBytes()
@@ -117,24 +131,24 @@ namespace TekaTeka.Utils
 
         public override byte[] GetSongBytes(bool isPreview = false)
         {
-            var directory = Path.GetDirectoryName(this.modPath);
+            var directory = Path.GetDirectoryName(this.modFolderPath);
 
             string acbFile = Path.GetFileNameWithoutExtension(this.song.metadata.wave) + ".acb";
             int offset;
             if (isPreview)
             {
                 acbFile = "P" + acbFile;
-                offset = (int)(this.song.metadata.demoStart);
+                offset = (int)(this.song.metadata.demoStart * 1000);
             }
             else
             {
                 offset = (int)((60 / this.song.bpm * 1000) * 4);
             }
 
-            var acbPath = Path.Combine(this.modPath, acbFile);
-            string songFilePath = Path.Combine(this.modPath, this.song.metadata.wave);
+            var acbPath = Path.Combine(this.modFolderPath, acbFile);
+
             tja2fumen.TJAConvert.FileType fileType;
-            switch (Path.GetExtension(songFilePath))
+            switch (Path.GetExtension(this.wavePath))
             {
             case ".wav":
                 fileType = tja2fumen.TJAConvert.FileType.WAV;
@@ -150,7 +164,7 @@ namespace TekaTeka.Utils
                 break;
             }
 
-            if (tja2fumen.TJAConvert.ConvertToAcb(songFilePath, fileType, isPreview, offset))
+            if (tja2fumen.TJAConvert.ConvertToAcb(this.wavePath, fileType, isPreview, offset))
             {
                 return File.ReadAllBytes(acbPath);
             }

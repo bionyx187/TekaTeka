@@ -62,24 +62,34 @@ namespace TekaTeka.Utils
 
         public void AddTjaMods(List<SongMod> mods)
         {
-            foreach (string path in Directory.GetDirectories(Path.Combine(CustomSongLoader.songsPath, "TJAsongs")))
+            //
+            foreach (TjaSongMod.Genre genre in Enum.GetValues(typeof(TjaSongMod.Genre)))
             {
-                string folder = Path.GetFileName(path) ?? "";
-                if (folder != "")
+                string genrePath =
+                    Path.Combine(CustomSongLoader.songsPath, "TJAsongs", TjaSongMod.GenreFolders[(int)genre]);
+                if (!Directory.Exists(genrePath))
                 {
-                    try
+                    Directory.CreateDirectory(genrePath);
+                }
+                foreach (string path in Directory.GetDirectories(genrePath))
+                {
+                    string folder = Path.GetFileName(path) ?? "";
+                    if (folder != "")
                     {
-                        TjaSongMod mod = new TjaSongMod(folder, 3000 + tjaSongs);
-                        if (mod.enabled)
+                        try
                         {
-                            Logger.Log($"Mod {mod.name} Loaded", LogType.Info);
-                            mods.Add(mod);
-                            tjaSongs++;
+                            TjaSongMod mod = new TjaSongMod(folder, 3000 + tjaSongs, genre);
+                            if (mod.enabled)
+                            {
+                                Logger.Log($"Mod {mod.name} Loaded", LogType.Info);
+                                mods.Add(mod);
+                                tjaSongs++;
+                            }
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log($"Error when loading TJA mod \"{path}\":\n{ex.ToString()}", LogType.Error);
+                        catch (Exception ex)
+                        {
+                            Logger.Log($"Error when loading TJA mod \"{path}\":\n{ex.ToString()}", LogType.Error);
+                        }
                     }
                 }
             }
