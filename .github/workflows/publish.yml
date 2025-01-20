@@ -56,9 +56,15 @@ jobs:
           body: |
             ## How to use
 
-            - Install [BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html)
-            - Download the latest version of `RF.TekaTeka.zip` from this page and extract its contents on `(GameFolder)\BepInEx\plugins\`
-            - Place all your mods on the folder named `TekaSongs` created the first time you execute the mod
+            ### Install using [TaikoModManager](https://github.com/cainan-c/TaikoModManager) (Recommended)
+
+            <a href="https://shorturl.at/l1XIH"> <img src="https://i.imgur.com/aoMgX3B.png" alt="One-click Install using the Taiko Mod Manager" width="256"></a>
+
+            ### Manually install
+
+            1. [Install BepInEx](https://docs.bepinex.dev/articles/user_guide/installation/index.html)
+            2. Download the latest version of `RF.TekaTeka.zip` from the [releases page](https://github.com/Renzo904/TekaTeka/releases)
+            3. Extract its contents on `(GameFolder)\BepInEx\plugins\`
 
             ## CHANGELOG
               
