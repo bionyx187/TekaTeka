@@ -100,6 +100,15 @@ namespace TekaTeka.Plugins
             }
         }
 
+        [HarmonyPatch(typeof(MusicDataInterface))]
+        [HarmonyPatch(nameof(MusicDataInterface.Reload))]
+        [HarmonyPatch(MethodType.Normal)]
+        [HarmonyPostfix]
+        public static void MusicDataInterface_Reload_Postfix(MusicDataInterface __instance) {
+            // The music data manager has been reset, so we need to publish the mod songs.
+            songsManager.PublishSongs();
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Scripts.UserData.UserData), nameof(Scripts.UserData.UserData.FixData))]
         static void PatchLoad(ref Scripts.UserData.UserData __instance)

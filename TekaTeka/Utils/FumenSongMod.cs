@@ -2,6 +2,7 @@
 using System.Text;
 using TekaTeka.Plugins;
 using Tommy;
+using static MusicDataInterface;
 
 namespace TekaTeka.Utils
 {
@@ -143,22 +144,14 @@ namespace TekaTeka.Utils
             {
                 MusicDataInterface.MusicInfo song = this.songList[i];
                 if (!manager.currentSongs.Contains(song.UniqueId))
-                {
+                { 
                     songsAdded++;
 
-                    manager.currentSongs.Add(song.UniqueId);
-                    manager.songFileToMod.Add(song.SongFileName, this);
-                    manager.uniqueIdToMod.Add(song.UniqueId, this);
-                    manager.idToMod.Add(song.Id, this);
                     var entry = new FumenSongEntry(this.modFolder, song);
                     this.chartFileToEntry.Add(song.Id, entry);
                     this.songFileToEntry.Add(song.SongFileName, entry);
 
-                    manager.initialPossessionData.InitialPossessionInfoAccessers.Add(
-                        new InitialPossessionDataInterface.InitialPossessionInfoAccessor(
-                            (int)InitialPossessionDataInterface.RewardTypes.Song, song.UniqueId));
-
-                    manager.musicData.AddMusicInfo(ref song);
+                    manager.RetainMusicInfo(song, this);
                 }
                 else
                 {
