@@ -1,6 +1,7 @@
 using Scripts.UserData;
 using Scripts.UserData.Flag;
 using TekaTeka.Plugins;
+using static MusicDataInterface;
 
 namespace TekaTeka.Utils
 {
@@ -10,6 +11,8 @@ namespace TekaTeka.Utils
         public Dictionary<int, SongMod> uniqueIdToMod = new Dictionary<int, SongMod>();
         public Dictionary<string, SongMod> idToMod = new Dictionary<string, SongMod>();
         public Dictionary<string, SongMod> songFileToMod = new Dictionary<string, SongMod>();
+        public List<MusicDataInterface.MusicInfo> musicInfos = new List<MusicDataInterface.MusicInfo>();
+
         public MusicDataInterface musicData => TaikoSingletonMonoBehaviour<DataManager>.Instance.MusicData;
         public InitialPossessionDataInterface initialPossessionData =>
             TaikoSingletonMonoBehaviour<DataManager>.Instance.InitialPossessionData;
@@ -26,6 +29,7 @@ namespace TekaTeka.Utils
                 this.currentSongs.Add(accesser.UniqueId);
             }
             this.SetupMods();
+            this.PublishSongs();
         }
 
         public List<SongMod> GetMods()
@@ -92,6 +96,24 @@ namespace TekaTeka.Utils
                         }
                     }
                 }
+            }
+        }
+
+        public void RetainMusicInfo(MusicDataInterface.MusicInfo musicInfo, SongMod mod) {
+            this.currentSongs.Add(musicInfo.UniqueId);
+            this.songFileToMod.Add(musicInfo.SongFileName, mod);
+            this.uniqueIdToMod.Add(musicInfo.UniqueId, mod);
+            this.idToMod.Add(musicInfo.Id, mod);
+            this.musicInfos.Add(musicInfo);
+            this.initialPossessionData.InitialPossessionInfoAccessers.Add(
+                new InitialPossessionDataInterface.InitialPossessionInfoAccessor(
+                    (int)InitialPossessionDataInterface.RewardTypes.Song, musicInfo.UniqueId));
+        }
+
+        public void PublishSongs() {
+            for (int i = 0; i < this.musicInfos.Count; i++) {
+                var tmp = this.musicInfos[i];
+                this.musicData.AddMusicInfo(ref tmp);
             }
         }
 

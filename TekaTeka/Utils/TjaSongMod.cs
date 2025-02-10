@@ -99,20 +99,7 @@ namespace TekaTeka.Utils
 
         public override void AddMod(ModdedSongsManager manager)
         {
-            var musicInfo = this.song.musicInfo;
-
-            var tjaSong = tja2fumen.Parsers.ParseTja(this.tjaPath);
-            uint songHash = _3rdParty.MurmurHash2.Hash(File.ReadAllBytes(this.tjaPath)) & 0xFFFF_FFF;
-            manager.currentSongs.Add(this.uniqueId);
-            manager.songFileToMod.Add($"SONG_{songHash}", this);
-            manager.uniqueIdToMod.Add(this.uniqueId, this);
-
-            manager.idToMod.Add(songHash.ToString(), this);
-            manager.musicData.AddMusicInfo(ref musicInfo);
-
-            manager.initialPossessionData.InitialPossessionInfoAccessers.Add(
-                new InitialPossessionDataInterface.InitialPossessionInfoAccessor(
-                    (int)InitialPossessionDataInterface.RewardTypes.Song, musicInfo.UniqueId));
+            manager.RetainMusicInfo(this.song.musicInfo, this);
         }
 
         public override SongEntry GetSongEntry(string id, bool idIsSongFile = false)
