@@ -17,28 +17,26 @@ namespace TekaTeka.Plugins
 
         public static readonly string songsPath = Path.Combine(BepInEx.Paths.GameRootPath, "TekaSongs");
 
-        static List<MusicDataInterface.MusicInfo> customSongsList = new List<MusicDataInterface.MusicInfo>();
-
         static CommonObjects commonObjects => TaikoSingletonMonoBehaviour<CommonObjects>.Instance;
 
-        static ModdedSongsManager songsManager;
+        private static ModdedSongsManager songsManager;
 
-        public static void InitializeLoader()
+        static CustomSongLoader()
         {
-            if (!Directory.Exists(songsPath))
-            {
-                Directory.CreateDirectory(songsPath);
-            }
+            songsManager = new ModdedSongsManager();
+        }
 
-            if (!Directory.Exists(Path.Combine(songsPath, "TJAsongs")))
-            {
-                Directory.CreateDirectory(Path.Combine(songsPath, "TJAsongs"));
+        public void InitializeLoader()
+        {
+            string songPath = Path.Combine(songsPath, "TJAsongs");
+            if (!Directory.Exists(songPath)) {
+                Directory.CreateDirectory(songPath);
             }
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(UnityEngine.Logger), nameof(UnityEngine.Logger.LogException))]
-        [HarmonyPatch(new Type[] { typeof(Il2CppSystem.Exception), typeof(UnityEngine.Object) })]
+        [HarmonyPatch([typeof(Il2CppSystem.Exception), typeof(UnityEngine.Object)])]
         static void DemistifyStackTrace(Il2CppSystem.Exception exception, UnityEngine.Object context)
         {
             Logger.Log(exception.GetStackTrace(true));
@@ -54,7 +52,7 @@ namespace TekaTeka.Plugins
             {
                 return;
             }
-            songsManager = new ModdedSongsManager();
+            songsManager.Initialize();
         }
 
 #endregion
@@ -154,7 +152,7 @@ namespace TekaTeka.Plugins
 
                         newArray[uniqueId] = musicInfo;
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         var musicInfo = new Scripts.UserData.MusicInfoEx();
                         musicInfo.SetDefault();
@@ -174,6 +172,7 @@ namespace TekaTeka.Plugins
             __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.Song] = songArray;
             __instance.UserFlagData.userFlagData[(int)Scripts.UserData.Flag.UserFlagData.FlagType.TitleSongId] =
                 tittleSongArray;
+
         }
 
 #endregion
@@ -287,14 +286,8 @@ namespace TekaTeka.Plugins
                     yield return false;
                 }
 
-                string originalFile = Path.Combine(UnityEngine.Application.streamingAssetsPath, SONGS_FOLDER,
-                                                   player.CueSheetName + ".bin");
-
                 string songFile = player.CueSheetName.TrimStart('P'); // PSONG_.. -> SONG_..
-
                 SongMod? mod = songsManager.GetModPath(songFile);
-                string modName = mod != null ? mod.GetModFolder() : "";
-                string modFile = Path.Combine(songsPath, modName, SONGS_FOLDER, player.CueSheetName);
                 Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppStructArray<byte> bytes;
 
                 if (mod != null)
@@ -304,6 +297,8 @@ namespace TekaTeka.Plugins
                 }
                 else
                 {
+                    string originalFile = Path.Combine(UnityEngine.Application.streamingAssetsPath, SONGS_FOLDER,
+                                   player.CueSheetName + ".bin");
                     var request = Cryptgraphy.ReadAllAesBytesAsync(originalFile, Cryptgraphy.AesKeyType.Type0);
                     while (!request.IsDone)
                     {
@@ -312,6 +307,11 @@ namespace TekaTeka.Plugins
                     bytes = request.Bytes;
                 }
 
+                if (bytes.Length == 0)
+                {
+
+                    yield return null;
+                }
                 var cueSheet = CriAtom.AddCueSheetAsync(player.CueSheetName, bytes, null, null);
 
                 player.CueSheet = cueSheet;

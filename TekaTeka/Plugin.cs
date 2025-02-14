@@ -13,52 +13,54 @@ namespace TekaTeka
     [BepInPlugin(PluginGuid, ModName, ModVersion)]
     public class Plugin : BasePlugin
     {
+
         public const string PluginGuid = "RF.TekaTeka";
         public const string ModName = "TekaTeka";
         public const string ModVersion = "1.2.1";
-
-        public static Plugin Instance;
-        private Harmony _harmony = null;
-        public new static ManualLogSource Log;
+        internal static ManualLogSource? LogSource;
+        private Harmony _harmony;
+        private CustomSongLoader? _loader;
 
         public ConfigEntry<bool> ConfigEnabled;
 
+        public Plugin()
+        {
+            _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
+            LogSource = base.Log;
+            ConfigEnabled = Config.Bind("General", "Enabled", true, "Enables the mod.");
+
+            _loader = new CustomSongLoader();
+
+        }
+
         public override void Load()
         {
-            Instance = this;
-
-            Log = base.Log;
-
-            SetupConfig();
             SetupHarmony();
         }
 
-        private void SetupConfig()
+        public override bool Unload()
         {
-            var dataFolder = Path.Combine("BepInEx", "data", ModName);
-
-            ConfigEnabled = Config.Bind("General", "Enabled", true, "Enables the mod.");
+            _harmony.UnpatchSelf();
+            _loader = null;
+            return base.Unload();
         }
 
         private void SetupHarmony()
         {
-            // Patch methods
-            _harmony = new Harmony(MyPluginInfo.PLUGIN_GUID);
-
             if (ConfigEnabled.Value)
             {
                 bool result = true;
                 // If any PatchFile fails, result will become false
                 result &= PatchFile(typeof(CustomSongLoader));
-                CustomSongLoader.InitializeLoader();
+                _loader?.InitializeLoader();
 
                 if (result)
                 {
-                    Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
+                    LogSource?.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is loaded!");
                 }
                 else
                 {
-                    Log.LogError($"Plugin {MyPluginInfo.PLUGIN_GUID} failed to load.");
+                    LogSource?.LogError($"Plugin {MyPluginInfo.PLUGIN_GUID} failed to load.");
                     // Unload this instance of Harmony
                     // I hope this works the way I think it does
                     _harmony.UnpatchSelf();
@@ -66,7 +68,7 @@ namespace TekaTeka
             }
             else
             {
-                Log.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is disabled.");
+                LogSource?.LogInfo($"Plugin {MyPluginInfo.PLUGIN_NAME} is disabled.");
             }
         }
 
@@ -86,8 +88,8 @@ namespace TekaTeka
             }
             catch (Exception e)
             {
-                Log.LogInfo("Failed to patch file: " + type.FullName);
-                Log.LogInfo(e.Message);
+                LogSource?.LogInfo("Failed to patch file: " + type.FullName);
+                LogSource?.LogInfo(e.Message);
                 return false;
             }
         }

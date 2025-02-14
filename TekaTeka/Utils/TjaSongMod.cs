@@ -80,7 +80,7 @@ namespace TekaTeka.Utils
                     writer.Flush();
                 }
             }
-
+            this.song = new TjaSongEntry(this.modFolder, id, genre);
             this.enabled = table["enabled"].IsBoolean ? table["enabled"].AsBoolean.Value : true;
 
             if (!this.enabled)
@@ -89,7 +89,7 @@ namespace TekaTeka.Utils
                 return;
             }
 
-            this.song = new TjaSongEntry(this.modFolder, id, genre);
+
         }
 
         public override bool IsValidMod()
@@ -104,8 +104,8 @@ namespace TekaTeka.Utils
 
         public override SongEntry GetSongEntry(string id, bool idIsSongFile = false)
         {
-            song.songFile = id;
-            return this.song;
+            song.SongFile = id;
+            return song;
         }
 
         public override void SaveUserData(UserData userData)

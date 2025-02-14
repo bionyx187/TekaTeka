@@ -132,7 +132,7 @@ namespace TekaTeka.Utils
             else
             {
                 SongEntry songEntry = this.chartFileToEntry[id.Split('_')[0]];
-                songEntry.songFile = id;
+                songEntry.SongFile = id;
                 return songEntry;
             }
         }
@@ -143,7 +143,7 @@ namespace TekaTeka.Utils
             for (int i = 0; i < this.songList.Count; i++)
             {
                 MusicDataInterface.MusicInfo song = this.songList[i];
-                if (!manager.currentSongs.Contains(song.UniqueId))
+                if (manager.GetModPath(song.UniqueId) == null)
                 { 
                     songsAdded++;
 
