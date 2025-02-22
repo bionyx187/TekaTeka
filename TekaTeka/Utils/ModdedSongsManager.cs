@@ -1,13 +1,15 @@
 using Scripts.UserData;
 using Scripts.UserData.Flag;
 using TekaTeka.Plugins;
-using static MusicDataInterface;
 
 namespace TekaTeka.Utils
 {
     internal class ModdedSongsManager
     {
+        // Current songs is all music identifiers: core content, DLC, and mods.
         public HashSet<int> currentSongs = new HashSet<int>();
+        // Other data structures only hold information about mods. musicInfos should
+        // not contain MusicInfo for non-mod content.
         public Dictionary<int, SongMod> uniqueIdToMod = new Dictionary<int, SongMod>();
         public Dictionary<string, SongMod> idToMod = new Dictionary<string, SongMod>();
         public Dictionary<string, SongMod> songFileToMod = new Dictionary<string, SongMod>();
@@ -23,7 +25,6 @@ namespace TekaTeka.Utils
 
         public ModdedSongsManager()
         {
-
             foreach (MusicDataInterface.MusicInfoAccesser accesser in musicData.MusicInfoAccesserList)
             {
                 this.currentSongs.Add(accesser.UniqueId);
@@ -99,7 +100,18 @@ namespace TekaTeka.Utils
             }
         }
 
-        public void RetainMusicInfo(MusicDataInterface.MusicInfo musicInfo, SongMod mod) {
+        public void RemoveMusicInfo(MusicDataInterface.MusicInfo musicInfo, SongMod mod)
+        {
+            this.currentSongs.Remove(musicInfo.UniqueId);
+            this.songFileToMod.Remove(musicInfo.Id);
+            this.uniqueIdToMod.Remove(musicInfo.UniqueId);
+            this.idToMod.Remove(musicInfo.Id);
+            this.musicInfos.Remove(musicInfo);
+            musicData.RemoveMusicInfo(musicInfo.UniqueId);
+        }
+
+        public void RetainMusicInfo(MusicDataInterface.MusicInfo musicInfo, SongMod mod)
+        {
             this.currentSongs.Add(musicInfo.UniqueId);
             this.songFileToMod.Add(musicInfo.SongFileName, mod);
             this.uniqueIdToMod.Add(musicInfo.UniqueId, mod);
@@ -110,8 +122,10 @@ namespace TekaTeka.Utils
                     (int)InitialPossessionDataInterface.RewardTypes.Song, musicInfo.UniqueId));
         }
 
-        public void PublishSongs() {
-            for (int i = 0; i < this.musicInfos.Count; i++) {
+        public void PublishSongs()
+        {
+            for (int i = 0; i < this.musicInfos.Count; i++)
+            {
                 var tmp = this.musicInfos[i];
                 this.musicData.AddMusicInfo(ref tmp);
             }

@@ -102,6 +102,11 @@ namespace TekaTeka.Utils
             manager.RetainMusicInfo(this.song.musicInfo, this);
         }
 
+        public override void RemoveMod(string unused, ModdedSongsManager manager)
+        {
+            manager.RemoveMusicInfo(this.song.musicInfo, this);
+        }
+
         public override SongEntry GetSongEntry(string id, bool idIsSongFile = false)
         {
             song.songFile = id;
