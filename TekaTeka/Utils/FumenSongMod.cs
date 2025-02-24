@@ -1,8 +1,7 @@
-﻿using Scripts.UserData;
+using Scripts.UserData;
 using System.Text;
 using TekaTeka.Plugins;
 using Tommy;
-using static MusicDataInterface;
 
 namespace TekaTeka.Utils
 {
@@ -136,7 +135,15 @@ namespace TekaTeka.Utils
                 return songEntry;
             }
         }
-
+        public override void RemoveMod(string songId, ModdedSongsManager manager)
+        {
+            MusicDataInterface.MusicInfo? target = this.songList.Find(hit => hit.Id == songId);
+            if (target != null)
+            {
+                Logger.Log($"Removing Fumen mod '{modName}' song id {target.UniqueId}");
+                manager.RemoveMusicInfo(target);
+            }
+        }
         public override void AddMod(ModdedSongsManager manager)
         {
             int songsAdded = 0;
@@ -144,7 +151,7 @@ namespace TekaTeka.Utils
             {
                 MusicDataInterface.MusicInfo song = this.songList[i];
                 if (!manager.HasSong(song.UniqueId))
-                { 
+                {
                     songsAdded++;
 
                     var entry = new FumenSongEntry(this.modFolder, song);

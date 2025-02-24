@@ -5,6 +5,7 @@ using System.Text;
 using TekaTeka.Utils;
 using Scripts.UserData;
 using Il2CppSystem.Security.Cryptography;
+using static MusicDataInterface;
 
 namespace TekaTeka.Plugins
 {
@@ -104,9 +105,28 @@ namespace TekaTeka.Plugins
         [HarmonyPatch(nameof(MusicDataInterface.Reload))]
         [HarmonyPatch(MethodType.Normal)]
         [HarmonyPostfix]
-        public static void MusicDataInterface_Reload_Postfix(MusicDataInterface __instance) {
+        public static void MusicDataInterface_Reload_Postfix(MusicDataInterface __instance)
+        {
             // The music data manager has been reset, so we need to publish the mod songs.
             songsManager.PublishSongs();
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(MusicDataInterface), nameof(MusicDataInterface.AddMusicInfo))]
+        public static bool MusicDataInterface_AddMusicInfo_Prefix(MusicDataInterface __instance,
+                                                                  ref MusicInfo musicinfo)
+        {
+            if (songsManager == null)
+            {
+                return true;
+            }
+            SongMod? mod = songsManager.GetModFromId(musicinfo.Id);
+            if (mod != null)
+            {
+                Logger.Log($"Removing new song: {musicinfo.Id}: official ID: {musicinfo.UniqueId}");
+                mod.RemoveMod(musicinfo.Id, songsManager);
+            }
+            return true;
         }
 
         [HarmonyPrefix]

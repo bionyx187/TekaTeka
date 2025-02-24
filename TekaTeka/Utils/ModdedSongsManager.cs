@@ -1,13 +1,15 @@
 using Scripts.UserData;
 using Scripts.UserData.Flag;
 using TekaTeka.Plugins;
-using static MusicDataInterface;
 
 namespace TekaTeka.Utils
 {
     internal class ModdedSongsManager
     {
+        // Current songs is all music identifiers: core content, DLC, and mods.
         private HashSet<int> currentSongs = new HashSet<int>();
+        // Other data structures only hold information about mods. musicInfos should
+        // not contain MusicInfo for non-mod content.
         private Dictionary<int, SongMod> uniqueIdToMod = new Dictionary<int, SongMod>();
         private Dictionary<string, SongMod> idToMod = new Dictionary<string, SongMod>();
         private Dictionary<string, SongMod> songFileToMod = new Dictionary<string, SongMod>();
@@ -23,7 +25,6 @@ namespace TekaTeka.Utils
 
         public ModdedSongsManager()
         {
-
             foreach (MusicDataInterface.MusicInfoAccesser accesser in musicData.MusicInfoAccesserList)
             {
                 this.currentSongs.Add(accesser.UniqueId);
@@ -99,7 +100,19 @@ namespace TekaTeka.Utils
             }
         }
 
-        public void RetainMusicInfo(MusicDataInterface.MusicInfo musicInfo, SongMod mod) {
+        public void RemoveMusicInfo(MusicDataInterface.MusicInfo musicInfo)
+        {
+            this.currentSongs.Remove(musicInfo.UniqueId);
+            this.songFileToMod.Remove(musicInfo.Id);
+            this.uniqueIdToMod.Remove(musicInfo.UniqueId);
+            this.idToMod.Remove(musicInfo.Id);
+            this.musicInfos.Remove(musicInfo);
+            musicData.RemoveMusicInfo(musicInfo.UniqueId);
+            musicData.SortByOrder();
+        }
+
+        public void RetainMusicInfo(MusicDataInterface.MusicInfo musicInfo, SongMod mod)
+        {
             this.currentSongs.Add(musicInfo.UniqueId);
             this.songFileToMod.Add(musicInfo.SongFileName, mod);
             this.uniqueIdToMod.Add(musicInfo.UniqueId, mod);
@@ -110,11 +123,14 @@ namespace TekaTeka.Utils
                     (int)InitialPossessionDataInterface.RewardTypes.Song, musicInfo.UniqueId));
         }
 
-        public void PublishSongs() {
-            for (int i = 0; i < this.musicInfos.Count; i++) {
+        public void PublishSongs()
+        {
+            for (int i = 0; i < this.musicInfos.Count; i++)
+            {
                 var tmp = this.musicInfos[i];
                 this.musicData.AddMusicInfo(ref tmp);
             }
+            this.musicData.SortByOrder();
         }
 
         public void SetupMods()
@@ -145,18 +161,38 @@ namespace TekaTeka.Utils
 
         public SongMod? GetModPath(string songFileName)
         {
-            if (this.songFileToMod.ContainsKey(songFileName))
+            SongMod? songMod = null;
+            songMod = this.GetModFromSongFile(songFileName);
+            if (songMod != null)
             {
-                return this.songFileToMod[songFileName];
+                return songMod;
             }
-            else if (this.idToMod.ContainsKey(songFileName))
+
+            songMod = this.GetModFromId(songFileName);
+            if (songMod != null)
             {
-                return this.idToMod[songFileName];
+                return songMod;
             }
-            else
+
+            return null;
+        }
+
+        public SongMod? GetModFromId(string songId)
+        {
+            if (!this.idToMod.ContainsKey(songId))
             {
                 return null;
             }
+            return this.idToMod[songId];
+        }
+
+        public SongMod? GetModFromSongFile(string songFile)
+        {
+            if (!this.songFileToMod.ContainsKey(songFile))
+            {
+                return null;
+            }
+            return this.songFileToMod[songFile];
         }
 
         public UserData FilterModdedData(UserData userData)
