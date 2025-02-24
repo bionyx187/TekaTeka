@@ -7,13 +7,13 @@ namespace TekaTeka.Utils
     internal class ModdedSongsManager
     {
         // Current songs is all music identifiers: core content, DLC, and mods.
-        public HashSet<int> currentSongs = new HashSet<int>();
+        private HashSet<int> currentSongs = new HashSet<int>();
         // Other data structures only hold information about mods. musicInfos should
         // not contain MusicInfo for non-mod content.
-        public Dictionary<int, SongMod> uniqueIdToMod = new Dictionary<int, SongMod>();
-        public Dictionary<string, SongMod> idToMod = new Dictionary<string, SongMod>();
-        public Dictionary<string, SongMod> songFileToMod = new Dictionary<string, SongMod>();
-        public List<MusicDataInterface.MusicInfo> musicInfos = new List<MusicDataInterface.MusicInfo>();
+        private Dictionary<int, SongMod> uniqueIdToMod = new Dictionary<int, SongMod>();
+        private Dictionary<string, SongMod> idToMod = new Dictionary<string, SongMod>();
+        private Dictionary<string, SongMod> songFileToMod = new Dictionary<string, SongMod>();
+        private List<MusicDataInterface.MusicInfo> musicInfos = new List<MusicDataInterface.MusicInfo>();
 
         public MusicDataInterface musicData => TaikoSingletonMonoBehaviour<DataManager>.Instance.MusicData;
         public InitialPossessionDataInterface initialPossessionData =>
@@ -154,16 +154,9 @@ namespace TekaTeka.Utils
             }
         }
 
-        public SongMod? GetModPath(int uniqueId)
+        public bool HasSong(int uniqueId)
         {
-            if (this.uniqueIdToMod.ContainsKey(uniqueId))
-            {
-                return this.uniqueIdToMod[uniqueId];
-            }
-            else
-            {
-                return null;
-            }
+            return currentSongs.Contains(uniqueId);
         }
 
         public SongMod? GetModPath(string songFileName)
