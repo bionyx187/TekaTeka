@@ -7,6 +7,7 @@ namespace TekaTeka.Utils
     {
         string modFolder;
         string modPath;
+        float songDelay;
 
         tja2fumen.TJASong song;
         TjaSongMod.Genre genre;
@@ -34,6 +35,8 @@ namespace TekaTeka.Utils
                 {
                     fumenCourse = tja2fumen.Converters.ConvertTjaToFumen(song.courses[diff]);
                     shinuchiScores[i] = fumenCourse.shinuchiScore;
+                    // All courses have the same initial BPM adjustment
+                    this.songDelay = (60 / fumenCourse.measures[0].bpm * 1000) * 4;
                 }
                 else
                 {
@@ -169,7 +172,7 @@ namespace TekaTeka.Utils
             }
             else
             {
-                offset = (int)((60 / this.song.bpm * 1000) * 4);
+                offset = (int)this.songDelay;
             }
 
             var acbPath = Path.Combine(this.modFolderPath, acbFile);
