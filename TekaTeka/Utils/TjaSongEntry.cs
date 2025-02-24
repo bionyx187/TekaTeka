@@ -191,7 +191,7 @@ namespace TekaTeka.Utils
                 break;
             }
 
-            if (tja2fumen.TJAConvert.ConvertToAcb(this.wavePath, fileType, isPreview, offset))
+            if (tja2fumen.TJAConvert.ConvertToAcb(this.wavePath, this.musicInfo.SongFileName, fileType, isPreview, offset))
             {
                 return File.ReadAllBytes(acbPath);
             }
