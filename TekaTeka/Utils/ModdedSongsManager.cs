@@ -161,18 +161,38 @@ namespace TekaTeka.Utils
 
         public SongMod? GetModPath(string songFileName)
         {
-            if (this.songFileToMod.ContainsKey(songFileName))
+            SongMod? songMod = null;
+            songMod = this.GetModFromSongFile(songFileName);
+            if (songMod != null)
             {
-                return this.songFileToMod[songFileName];
+                return songMod;
             }
-            else if (this.idToMod.ContainsKey(songFileName))
+
+            songMod = this.GetModFromId(songFileName);
+            if (songMod != null)
             {
-                return this.idToMod[songFileName];
+                return songMod;
             }
-            else
+
+            return null;
+        }
+
+        public SongMod? GetModFromId(string songId)
+        {
+            if (!this.idToMod.ContainsKey(songId))
             {
                 return null;
             }
+            return this.idToMod[songId];
+        }
+
+        public SongMod? GetModFromSongFile(string songFile)
+        {
+            if (!this.songFileToMod.ContainsKey(songFile))
+            {
+                return null;
+            }
+            return this.songFileToMod[songFile];
         }
 
         public UserData FilterModdedData(UserData userData)

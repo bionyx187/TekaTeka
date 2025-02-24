@@ -113,16 +113,17 @@ namespace TekaTeka.Plugins
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(MusicDataInterface), nameof(MusicDataInterface.AddMusicInfo))]
-        public static bool MusicDataInterface_AddMusicInfo_Prefix(MusicDataInterface __instance, ref MusicInfo musicinfo)
+        public static bool MusicDataInterface_AddMusicInfo_Prefix(MusicDataInterface __instance,
+                                                                  ref MusicInfo musicinfo)
         {
             if (songsManager == null)
             {
                 return true;
             }
-            if (songsManager.idToMod.ContainsKey(musicinfo.Id))
+            SongMod? mod = songsManager.GetModFromId(musicinfo.Id);
+            if (mod != null)
             {
                 Logger.Log($"Removing new song: {musicinfo.Id}: official ID: {musicinfo.UniqueId}");
-                var mod = songsManager.idToMod[musicinfo.Id];
                 mod.RemoveMod(musicinfo.Id, songsManager);
             }
             return true;
