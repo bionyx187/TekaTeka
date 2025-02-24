@@ -179,7 +179,7 @@ namespace TekaTeka.Utils
         protected string modFolder { get; set; }
 
         public abstract void AddMod(ModdedSongsManager manager);
-
+        public abstract void RemoveMod(string songId, ModdedSongsManager manager);
         public abstract bool IsValidMod();
 
         public string GetModFolder()

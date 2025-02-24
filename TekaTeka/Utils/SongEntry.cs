@@ -1,6 +1,4 @@
-﻿using AsmResolver;
-
-namespace TekaTeka.Utils
+﻿namespace TekaTeka.Utils
 {
     internal abstract class SongEntry
     {
